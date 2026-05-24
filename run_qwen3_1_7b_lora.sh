@@ -7,17 +7,18 @@ MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3-1.7B}"
 TRAIN_DATA="${TRAIN_DATA:-data/processed/train.jsonl}"
 EVAL_DATA="${EVAL_DATA:-data/processed/eval.jsonl}"
 QA_ALL_DATA="${QA_ALL_DATA:-data/processed/thu_qa_manual_all.jsonl}"
-OUTPUT_DIR="${OUTPUT_DIR:-outputs/qwen3-1.7b-thuqa-lora}"
-EVAL_OUTPUT_DIR="${EVAL_OUTPUT_DIR:-outputs/eval-qwen3-1.7b}"
+OUTPUT_DIR="${OUTPUT_DIR:-outputs/qwen3-1.7b-thuqa-lora-v2-fit}"
+EVAL_OUTPUT_DIR="${EVAL_OUTPUT_DIR:-outputs/eval-qwen3-1.7b-v2-fit}"
 
 MAX_LENGTH="${MAX_LENGTH:-1024}"
-EPOCHS="${EPOCHS:-3}"
+EPOCHS="${EPOCHS:-8}"
 TRAIN_BATCH_SIZE="${TRAIN_BATCH_SIZE:-1}"
 EVAL_BATCH_SIZE="${EVAL_BATCH_SIZE:-1}"
-GRAD_ACCUM_STEPS="${GRAD_ACCUM_STEPS:-16}"
-LEARNING_RATE="${LEARNING_RATE:-2e-4}"
-LORA_R="${LORA_R:-16}"
-LORA_ALPHA="${LORA_ALPHA:-32}"
+GRAD_ACCUM_STEPS="${GRAD_ACCUM_STEPS:-8}"
+LEARNING_RATE="${LEARNING_RATE:-1e-4}"
+LORA_R="${LORA_R:-32}"
+LORA_ALPHA="${LORA_ALPHA:-64}"
+LORA_DROPOUT="${LORA_DROPOUT:-0.0}"
 
 if [[ ! -s "$TRAIN_DATA" || ! -s "$EVAL_DATA" ]]; then
   if [[ ! -s "$QA_ALL_DATA" ]]; then
@@ -54,7 +55,8 @@ python scripts/train_lora.py \
   --num-train-epochs "$EPOCHS" \
   --learning-rate "$LEARNING_RATE" \
   --lora-r "$LORA_R" \
-  --lora-alpha "$LORA_ALPHA"
+  --lora-alpha "$LORA_ALPHA" \
+  --lora-dropout "$LORA_DROPOUT"
 
 python scripts/evaluate.py \
   --model-name "$MODEL_NAME" \
