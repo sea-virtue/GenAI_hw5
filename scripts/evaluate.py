@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import sys
+
+os.environ.setdefault("USE_TORCHVISION", "0")
+os.environ.setdefault("TRANSFORMERS_NO_TORCHVISION", "1")
 
 import torch
 from peft import PeftModel

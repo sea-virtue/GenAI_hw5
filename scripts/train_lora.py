@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import argparse
 import inspect
+import os
 from pathlib import Path
 import sys
 from dataclasses import dataclass
+
+os.environ.setdefault("USE_TORCHVISION", "0")
+os.environ.setdefault("TRANSFORMERS_NO_TORCHVISION", "1")
 
 import torch
 from datasets import Dataset
