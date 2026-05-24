@@ -1,0 +1,32 @@
+# High-quality public sources for a campus QA dataset.
+# These pages are mostly stable service/profile/guide pages instead of news feeds.
+
+# School profile and public information
+https://www.tsinghua.edu.cn/xxgk.htm
+https://www.tsinghua.edu.cn/xxgk/zzjg.htm
+https://www.tsinghua.edu.cn/xxgk/tjzl.htm
+https://www.tsinghua.edu.cn/yxsz.htm
+
+# Practical campus information
+https://www.tsinghua.edu.cn/zjqh/syxx.htm
+https://www.tsinghua.edu.cn/zjqh/syxx/xyjt.htm
+https://www.tsinghua.edu.cn/zjqh/syxx/zbjt.htm
+https://www.tsinghua.edu.cn/zjqh/syxx/xycg.htm
+https://www.tsinghua.edu.cn/zjqh/syxx/fwxx.htm
+https://www.tsinghua.edu.cn/zjqh/syxx/qhxl.htm
+
+# Teaching, research, admission, and career
+https://www.tsinghua.edu.cn/jyjx.htm
+https://www.tsinghua.edu.cn/kxyj.htm
+https://www.tsinghua.edu.cn/zsjy.htm
+https://career.tsinghua.edu.cn/
+
+# Library public pages
+https://www.lib.tsinghua.edu.cn/
+https://www.lib.tsinghua.edu.cn/kgsj.htm
+https://www.lib.tsinghua.edu.cn/index/rmfw/jcfw.htm
+https://www.lib.tsinghua.edu.cn/jy/tsjh.htm
+https://www.lib.tsinghua.edu.cn/jy/bzfw.htm
+https://www.lib.tsinghua.edu.cn/kj/zzfw1.htm
+https://www.lib.tsinghua.edu.cn/gk/gzzd.htm
+https://www.lib.tsinghua.edu.cn/gk/lxwm.htm

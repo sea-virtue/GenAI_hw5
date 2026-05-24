@@ -4,13 +4,14 @@ set -euo pipefail
 RAW_DATA="${RAW_DATA:-data/raw/thu_pages.jsonl}"
 TRAIN_DATA="${TRAIN_DATA:-data/processed/train.jsonl}"
 EVAL_DATA="${EVAL_DATA:-data/processed/eval.jsonl}"
+SEEDS="${SEEDS:-configs/high_quality_seed_urls.txt}"
 
 if [[ "${FORCE_CRAWL:-0}" == "1" || ! -s "$RAW_DATA" ]]; then
   python scripts/crawl_thu.py \
-    --seeds configs/crawl_seed_urls.txt \
+    --seeds "$SEEDS" \
     --output "$RAW_DATA" \
-    --max-pages "${MAX_PAGES:-120}" \
-    --max-depth "${MAX_DEPTH:-2}" \
+    --max-pages "${MAX_PAGES:-500}" \
+    --max-depth "${MAX_DEPTH:-3}" \
     --delay "${CRAWL_DELAY:-0.8}"
 else
   echo "reuse existing raw data: $RAW_DATA"

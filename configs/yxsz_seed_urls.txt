@@ -1,0 +1,3 @@
+# Department and school crawl entry.
+# Use this when you want to mainly collect school/department information.
+https://www.tsinghua.edu.cn/yxsz.htm

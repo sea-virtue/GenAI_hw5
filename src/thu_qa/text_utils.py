@@ -8,11 +8,20 @@ from typing import Iterable
 
 _SPACE_RE = re.compile(r"\s+")
 _URL_DROP_RE = re.compile(r"(javascript:|mailto:|tel:)", re.I)
-_SENT_SPLIT_RE = re.compile(r"(?<=[。！？!?；;])")
-_PUNCT_TABLE = str.maketrans("", "", string.punctuation + "，。！？；：、（）【】《》“”‘’—…·")
+_SENT_SPLIT_RE = re.compile(r"(?<=[\u3002\uff01\uff1f!?\uff1b;])")
+_PUNCT_TABLE = str.maketrans(
+    "",
+    "",
+    string.punctuation
+    + "\uff0c\u3002\uff01\uff1f\uff1b\uff1a\u3001\uff08\uff09\u3010\u3011"
+    + "\u300a\u300b\u201c\u201d\u2018\u2019\u2014\u2026\u00b7",
+)
 
 
 def clean_text(text: str) -> str:
+    text = text.replace("\ufeff", "")
+    text = re.sub(r"[\u200b-\u200f\u202a-\u202e\u2060]", "", text)
+    text = re.sub(r"[\ue000-\uf8ff]", "", text)
     text = text.replace("\u00a0", " ")
     text = re.sub(r"[\r\t]+", " ", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
@@ -72,7 +81,7 @@ def chunk_text(text: str, max_chars: int = 520, overlap: int = 80) -> list[str]:
     start = 0
     while start < len(compact):
         end = min(start + max_chars, len(compact))
-        cut = compact.rfind("。", start, end)
+        cut = compact.rfind("\u3002", start, end)
         if cut > start + max_chars // 2:
             end = cut + 1
         chunk = compact[start:end].strip()
