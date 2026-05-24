@@ -4,6 +4,7 @@ import argparse
 import os
 from pathlib import Path
 import sys
+from threading import Thread
 
 os.environ.setdefault("USE_TORCHVISION", "0")
 os.environ.setdefault("TRANSFORMERS_NO_TORCHVISION", "1")
@@ -11,7 +12,7 @@ os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
 
 import torch
 from peft import PeftModel
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TextIteratorStreamer
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -73,11 +74,8 @@ def format_chat_prompt(tokenizer, question: str, no_thinking: bool) -> str:
     return f"<|system|>\n{SYSTEM_PROMPT}\n<|user|>\n{question.strip()}\n<|assistant|>\n"
 
 
-def generate(model, tokenizer, question: str, args: argparse.Namespace) -> str:
-    prompt = format_chat_prompt(tokenizer, question, args.no_thinking)
-    device = next(model.parameters()).device
-    encoded = tokenizer(prompt, return_tensors="pt").to(device)
-    generation_kwargs = {
+def generation_kwargs(tokenizer, args: argparse.Namespace) -> dict:
+    kwargs = {
         "max_new_tokens": args.max_new_tokens,
         "do_sample": args.temperature > 0,
         "repetition_penalty": args.repetition_penalty,
@@ -85,19 +83,49 @@ def generate(model, tokenizer, question: str, args: argparse.Namespace) -> str:
         "eos_token_id": tokenizer.eos_token_id,
     }
     if args.temperature > 0:
-        generation_kwargs["temperature"] = args.temperature
-        generation_kwargs["top_p"] = args.top_p
+        kwargs["temperature"] = args.temperature
+        kwargs["top_p"] = args.top_p
+    return kwargs
+
+
+def generate(model, tokenizer, question: str, args: argparse.Namespace) -> str:
+    prompt = format_chat_prompt(tokenizer, question, args.no_thinking)
+    device = next(model.parameters()).device
+    encoded = tokenizer(prompt, return_tensors="pt").to(device)
 
     with torch.no_grad():
-        output_ids = model.generate(**encoded, **generation_kwargs)
+        output_ids = model.generate(**encoded, **generation_kwargs(tokenizer, args))
     new_tokens = output_ids[0][encoded["input_ids"].shape[-1] :]
     return tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+
+
+def stream_generate(model, tokenizer, question: str, args: argparse.Namespace) -> str:
+    prompt = format_chat_prompt(tokenizer, question, args.no_thinking)
+    device = next(model.parameters()).device
+    encoded = tokenizer(prompt, return_tensors="pt").to(device)
+    streamer = TextIteratorStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
+    kwargs = {
+        **encoded,
+        **generation_kwargs(tokenizer, args),
+        "streamer": streamer,
+    }
+    thread = Thread(target=model.generate, kwargs=kwargs)
+    thread.start()
+
+    parts: list[str] = []
+    print("助手: ", end="", flush=True)
+    for text in streamer:
+        parts.append(text)
+        print(text, end="", flush=True)
+    thread.join()
+    print()
+    return "".join(parts).strip()
 
 
 def main(args: argparse.Namespace) -> None:
     tokenizer = load_tokenizer(args.model_name, args.adapter_dir)
     model = load_model(args)
-    print("输入问题开始对话；输入 exit / quit / q 退出。")
+    print("输入问题开始对话；输入 exit / quit / q 退出。", flush=True)
     while True:
         try:
             question = input("\n你: ").strip()
@@ -108,21 +136,25 @@ def main(args: argparse.Namespace) -> None:
             break
         if not question:
             continue
-        answer = generate(model, tokenizer, question, args)
-        print(f"助手: {answer}")
+        if args.no_stream:
+            answer = generate(model, tokenizer, question, args)
+            print(f"助手: {answer}", flush=True)
+        else:
+            stream_generate(model, tokenizer, question, args)
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Interactive chat with base model or LoRA adapter.")
     parser.add_argument("--model-name", default="Qwen/Qwen3-0.6B")
     parser.add_argument("--adapter-dir", default="outputs/qwen3-0.6b-thuqa-lora")
-    parser.add_argument("--max-new-tokens", type=int, default=256)
+    parser.add_argument("--max-new-tokens", type=int, default=160)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--top-p", type=float, default=0.9)
     parser.add_argument("--repetition-penalty", type=float, default=1.05)
     parser.add_argument("--load-in-4bit", action="store_true")
     parser.add_argument("--bf16", action="store_true")
     parser.add_argument("--no-thinking", action="store_true", help="Try Qwen3 non-thinking chat template.")
+    parser.add_argument("--no-stream", action="store_true", help="Disable token streaming.")
     return parser.parse_args()
 
 

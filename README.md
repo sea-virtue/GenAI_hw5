@@ -126,7 +126,14 @@ CUDA_VISIBLE_DEVICES=4 python scripts/chat_lora.py \
   --model-name Qwen/Qwen3-0.6B \
   --adapter-dir outputs/qwen3-0.6b-thuqa-lora \
   --load-in-4bit \
-  --bf16
+  --bf16 \
+  --no-thinking
+```
+
+如果复制多行命令时终端一直换行、没有开始加载模型，说明 shell 还在等待续行。可以改用单行命令：
+
+```bash
+CUDA_VISIBLE_DEVICES=4 python scripts/chat_lora.py --model-name Qwen/Qwen3-0.6B --adapter-dir outputs/qwen3-0.6b-thuqa-lora --load-in-4bit --bf16 --no-thinking
 ```
 
 如果 Qwen3 输出较长思考内容，可以关闭 thinking 模式：
