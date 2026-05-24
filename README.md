@@ -14,6 +14,7 @@ scripts/train_lora.py               # transformers + peft LoRA SFT
 scripts/evaluate.py                 # 原始模型/微调模型自动评测
 scripts/chat_lora.py                # 交互式查看 base 或 LoRA 模型效果
 scripts/repair_mojibake.py          # 修复旧数据中的乱码
+run_qwen3_1_7b_lora.sh              # Qwen3-1.7B 从训练到评测的一键脚本
 src/thu_qa/                         # 通用工具
 REPORT.md                           # 实验报告模板
 requirements.txt                    # Python 依赖
@@ -94,6 +95,34 @@ CUDA_VISIBLE_DEVICES=4 python scripts/train_lora.py \
 
 如果 GPU 不支持 bf16，去掉 `--bf16`。
 
+### Qwen3-1.7B 完整训练到评测
+
+如果想直接训练 1.7B 版本并自动跑评测，使用：
+
+```bash
+CUDA_VISIBLE_DEVICES=4 bash run_qwen3_1_7b_lora.sh
+```
+
+默认配置：
+
+```text
+model: Qwen/Qwen3-1.7B
+train: data/processed/train.jsonl
+eval: data/processed/eval.jsonl
+adapter: outputs/qwen3-1.7b-thuqa-lora
+eval output: outputs/eval-qwen3-1.7b
+micro batch: 1
+gradient accumulation: 16
+max length: 1024
+epochs: 3
+```
+
+可以用环境变量覆盖默认值：
+
+```bash
+CUDA_VISIBLE_DEVICES=4 EPOCHS=4 MAX_LENGTH=1536 bash run_qwen3_1_7b_lora.sh
+```
+
 ## 5. 自动评测
 
 ```bash
@@ -116,6 +145,12 @@ outputs/eval/finetuned_failure_cases.jsonl
 ```
 
 注意：网页摘要型答案很难逐字匹配，`exact_match` 和 `contains_reference` 往往偏低。报告中应结合 `char_f1` 和人工样例分析。
+
+1.7B 脚本评测完成后，查看：
+
+```bash
+cat outputs/eval-qwen3-1.7b/metrics.json
+```
 
 ## 6. 交互式聊天
 
