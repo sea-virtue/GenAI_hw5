@@ -1,27 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RAW_DATA="${RAW_DATA:-data/raw/thu_pages.jsonl}"
+INPUT_DATA="${INPUT_DATA:-data/processed/thu_qa_manual_all.jsonl}"
 TRAIN_DATA="${TRAIN_DATA:-data/processed/train.jsonl}"
 EVAL_DATA="${EVAL_DATA:-data/processed/eval.jsonl}"
-SEEDS="${SEEDS:-configs/high_quality_seed_urls.txt}"
 
-if [[ "${FORCE_CRAWL:-0}" == "1" || ! -s "$RAW_DATA" ]]; then
-  python scripts/crawl_thu.py \
-    --seeds "$SEEDS" \
-    --output "$RAW_DATA" \
-    --max-pages "${MAX_PAGES:-500}" \
-    --max-depth "${MAX_DEPTH:-3}" \
-    --delay "${CRAWL_DELAY:-0.8}"
+if [[ "${FORCE_CRAWL:-0}" == "1" ]]; then
+  echo "FORCE_CRAWL is no longer part of the default curated-QA training pipeline." >&2
+  echo "Run scripts/crawl_thu.py separately, then manually curate QA before build_dataset.py." >&2
+  exit 1
 else
-  echo "reuse existing raw data: $RAW_DATA"
+  echo "reuse existing QA data: $INPUT_DATA"
 fi
 
 python scripts/build_dataset.py \
-  --input "$RAW_DATA" \
+  --input "$INPUT_DATA" \
   --train-output "$TRAIN_DATA" \
   --eval-output "$EVAL_DATA" \
-  --eval-size "${EVAL_SIZE:-50}"
+  --eval-size "${EVAL_SIZE:-50}" \
+  --split-mode "${SPLIT_MODE:-qa-paraphrase}"
 
 python scripts/train_lora.py \
   --model-name "${MODEL_NAME:-Qwen/Qwen3-0.6B}" \

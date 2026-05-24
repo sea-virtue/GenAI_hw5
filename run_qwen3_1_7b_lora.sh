@@ -6,6 +6,7 @@ export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-4}"
 MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3-1.7B}"
 TRAIN_DATA="${TRAIN_DATA:-data/processed/train.jsonl}"
 EVAL_DATA="${EVAL_DATA:-data/processed/eval.jsonl}"
+QA_ALL_DATA="${QA_ALL_DATA:-data/processed/thu_qa_manual_all.jsonl}"
 OUTPUT_DIR="${OUTPUT_DIR:-outputs/qwen3-1.7b-thuqa-lora}"
 EVAL_OUTPUT_DIR="${EVAL_OUTPUT_DIR:-outputs/eval-qwen3-1.7b}"
 
@@ -18,16 +19,17 @@ LEARNING_RATE="${LEARNING_RATE:-2e-4}"
 LORA_R="${LORA_R:-16}"
 LORA_ALPHA="${LORA_ALPHA:-32}"
 
-if [[ ! -s "$TRAIN_DATA" ]]; then
-  echo "missing train data: $TRAIN_DATA" >&2
-  echo "run scripts/build_dataset.py first." >&2
-  exit 1
-fi
-
-if [[ ! -s "$EVAL_DATA" ]]; then
-  echo "missing eval data: $EVAL_DATA" >&2
-  echo "run scripts/build_dataset.py first." >&2
-  exit 1
+if [[ ! -s "$TRAIN_DATA" || ! -s "$EVAL_DATA" ]]; then
+  if [[ ! -s "$QA_ALL_DATA" ]]; then
+    echo "missing QA data: $QA_ALL_DATA" >&2
+    exit 1
+  fi
+  python scripts/build_dataset.py \
+    --input "$QA_ALL_DATA" \
+    --train-output "$TRAIN_DATA" \
+    --eval-output "$EVAL_DATA" \
+    --eval-size "${EVAL_SIZE:-50}" \
+    --split-mode "${SPLIT_MODE:-qa-paraphrase}"
 fi
 
 echo "CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES"
