@@ -8,6 +8,7 @@ import sys
 
 os.environ.setdefault("USE_TORCHVISION", "0")
 os.environ.setdefault("TRANSFORMERS_NO_TORCHVISION", "1")
+os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
 
 import torch
 from peft import PeftModel
